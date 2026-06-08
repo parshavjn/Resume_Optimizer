@@ -8,9 +8,21 @@ const app = express();
 
 app.use(express.json({ limit: "50mb" }));
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    message: "API is connected and running!",
+    hasApiKey: !!process.env.GEMINI_API_KEY 
+  });
+});
+
 // API routes first
 app.post("/api/analyze-resume", async (req, res) => {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(400).send("GEMINI_API_KEY is not configured on Vercel. Please add it in Vercel Project Settings > Environment Variables.");
+    }
     const { masterResume, jobDescription, excelKeywords, targetRole } = req.body;
     
     const ai = new GoogleGenAI({
@@ -101,6 +113,9 @@ Respond exactly matching this layout.
 
 app.post("/api/generate-resume", async (req, res) => {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(400).send("GEMINI_API_KEY is not configured on Vercel. Please add it in Vercel Project Settings > Environment Variables.");
+    }
     const { masterResume, jobDescription, excelKeywords, targetRole } = req.body;
 
     const ai = new GoogleGenAI({

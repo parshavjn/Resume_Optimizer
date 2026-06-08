@@ -1,0 +1,6 @@
+{
+  "name": "Resume Optimizer",
+  "description": "An alignment evaluator and layout tailoring suite for professional resumes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

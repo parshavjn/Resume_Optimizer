@@ -61,6 +61,8 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<MatchAnalysisResult | null>(null);
   const [tailoredResume, setTailoredResume] = useState<string | null>(null);
+  const [keywordsReference, setKeywordsReference] = useState<string | null>(null);
+  const [activePreviewTab, setActivePreviewTab] = useState<'resume' | 'reference'>('resume');
   const [copied, setCopied] = useState(false);
 
   // File parsing logic
@@ -228,7 +230,9 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
         excelKeywords: excelKeywords,
         targetRole: targetRole
       });
-      setTailoredResume(result);
+      setTailoredResume(result.optimizedResume);
+      setKeywordsReference(result.keywordsReference);
+      setActivePreviewTab('resume');
       sounds.playSuccess();
     } catch (err) {
       console.error(err);
@@ -248,6 +252,19 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `Tailored_Resume_${targetRole.replace(/\s+/g, '_')}_${new Date().toISOString().substring(0,10)}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadKeywordsReferenceMd = () => {
+    if (!keywordsReference) return;
+    sounds.playSuccess();
+    const blob = new Blob([keywordsReference], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Keywords_Reference_${targetRole.replace(/\s+/g, '_')}_${new Date().toISOString().substring(0,10)}.md`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -364,6 +381,8 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
     setExcelKeywords([]);
     setAnalysisResult(null);
     setTailoredResume(null);
+    setKeywordsReference(null);
+    setActivePreviewTab('resume');
   };
 
   return (
@@ -862,6 +881,17 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
                     Download Markdown (.md)
                   </button>
 
+                  {keywordsReference && (
+                    <button 
+                      id="download-reference-btn"
+                      onClick={downloadKeywordsReferenceMd}
+                      className="w-full py-3 px-4 bg-[#050505] border border-[#222222] hover:border-[#38bdf8]/60 rounded-[12px] text-[10px] font-bold uppercase tracking-widest text-[#38bdf8] hover:text-[#38bdf8]/85 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#38bdf8]" />
+                      Download Keyword Report (.md)
+                    </button>
+                  )}
+
                   <button 
                     id="copy-markdown-btn"
                     onClick={copyToClipboard}
@@ -905,20 +935,53 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
 
             {/* Document preview panel */}
             <div className="flex-1 flex flex-col min-w-0 bg-[#050505]">
-              <div className="px-8 py-5 border-b border-[#222222] flex items-center justify-between bg-[#111111]/80 sticky top-0 z-20">
-                <span className="text-[11px] font-bold text-white uppercase tracking-[0.15em] text-left">
-                  Tailored Professional Resume Preview
-                </span>
-                <span className="text-[10px] bg-[#38bdf8]/10 text-[#38bdf8] px-3 py-1 rounded-[6px] border border-[#38bdf8]/20 font-bold uppercase tracking-widest">
-                  Optimized
+              <div className="px-8 py-3.5 border-b border-[#222222] flex items-center justify-between bg-[#111111]/80 sticky top-0 z-20">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => { sounds.playClick(); setActivePreviewTab('resume'); }}
+                    className={`text-[11px] font-bold uppercase tracking-[0.15em] py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                      activePreviewTab === 'resume'
+                        ? 'text-[#38bdf8] bg-[#38bdf8]/10 border border-[#38bdf8]/20'
+                        : 'text-[#64748b] hover:text-white border border-transparent'
+                    }`}
+                  >
+                    Tailored Resume
+                  </button>
+                  {keywordsReference && (
+                    <button
+                      onClick={() => { sounds.playClick(); setActivePreviewTab('reference'); }}
+                      className={`text-[11px] font-bold uppercase tracking-[0.15em] py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                        activePreviewTab === 'reference'
+                          ? 'text-[#38bdf8] bg-[#38bdf8]/10 border border-[#38bdf8]/20'
+                          : 'text-[#64748b] hover:text-white border border-transparent'
+                      }`}
+                    >
+                      Keywords Reference
+                    </button>
+                  )}
+                </div>
+                <span className="text-[10px] bg-[#38bdf8]/10 text-[#38bdf8] px-3 py-1.5 rounded-[6px] border border-[#38bdf8]/20 font-bold uppercase tracking-widest">
+                  {activePreviewTab === 'resume' ? 'Optimized Resume' : 'Target Keywords'}
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-12 md:p-16 scroll-smooth custom-scrollbar max-h-[60vh] bg-white text-gray-900 border-t border-[#222222] relative selection:bg-indigo-200 text-left">
-                <div className="prose prose-slate max-w-none text-left leading-relaxed">
-                  <Markdown_MarkdownImport>{tailoredResume}</Markdown_MarkdownImport>
+              {activePreviewTab === 'resume' ? (
+                <div className="flex-1 overflow-y-auto p-12 md:p-16 scroll-smooth custom-scrollbar max-h-[60vh] bg-white text-gray-900 border-t border-[#222222] relative selection:bg-indigo-200 text-left">
+                  <div className="prose prose-slate max-w-none text-left leading-relaxed">
+                    <Markdown_MarkdownImport>{tailoredResume}</Markdown_MarkdownImport>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-12 md:p-16 scroll-smooth custom-scrollbar max-h-[60vh] bg-[#0c0c0c] text-slate-300 border-t border-[#222222] relative text-left">
+                  <div className="prose prose-invert max-w-none text-left leading-relaxed">
+                    <h3 className="text-[#38bdf8] font-bold text-lg mb-6 uppercase tracking-wider">Tailoring & Keywords Reference Report</h3>
+                    <p className="text-xs text-slate-400 mb-8 border-b border-[#222222] pb-4">
+                      This report identifies exactly which target-role related keywords were integrated into the resume, mapped directly to your existing experience in the master resume. No fabrications or assumptions were made.
+                    </p>
+                    <Markdown_MarkdownImport>{keywordsReference || ''}</Markdown_MarkdownImport>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -29,7 +29,12 @@ export async function analyzeResumeAlignment(req: ResumeMatchRequest): Promise<M
   return await response.json();
 }
 
-export async function generateOptimizedResume(req: ResumeMatchRequest): Promise<string> {
+export interface TailoredResumeResult {
+  optimizedResume: string;
+  keywordsReference: string;
+}
+
+export async function generateOptimizedResume(req: ResumeMatchRequest): Promise<TailoredResumeResult> {
   const response = await fetch("/api/generate-resume", {
     method: "POST",
     headers: {
@@ -43,6 +48,5 @@ export async function generateOptimizedResume(req: ResumeMatchRequest): Promise<
     throw new Error(`Server error: ${errText}`);
   }
 
-  const data = await response.json();
-  return data.optimizedResume;
+  return await response.json();
 }

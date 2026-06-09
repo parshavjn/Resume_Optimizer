@@ -4,6 +4,38 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Helper function to call Gemini with retry & exponential backoff on transient errors
+async function generateContentWithRetry(
+  ai: GoogleGenAI,
+  options: { model: string; contents: string; [key: string]: any },
+  retries = 3,
+  delayMs = 1500
+): Promise<any> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await ai.models.generateContent(options);
+    } catch (error: any) {
+      const errorMsg = error?.message || String(error);
+      const isTransient = 
+        error?.status === "UNAVAILABLE" || 
+        error?.status === "RESOURCE_EXHAUSTED" ||
+        errorMsg.includes("503") || 
+        errorMsg.includes("UNAVAILABLE") ||
+        errorMsg.includes("high demand") ||
+        errorMsg.includes("RESOURCE_EXHAUSTED") ||
+        errorMsg.includes("429");
+
+      if (isTransient && attempt < retries) {
+        console.warn(`Attempt ${attempt} failed with transient error: ${errorMsg}. Retrying in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2; // Exponential backoff
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 const app = express();
 
 app.use(express.json({ limit: "50mb" }));
@@ -73,7 +105,7 @@ And then immediately follow with a premium Markdown section containing check-poi
 Respond exactly matching this layout.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry(ai, {
       model: "gemini-3.5-flash",
       contents: prompt,
     });
@@ -152,7 +184,7 @@ CRITICAL RULES:
 5. Provide the output in a clean, elegant Markdown resume format ready for exporting to Word or PDF. Do not write commentaries or introductory notes - output ONLY the optimized markdown resume directly.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry(ai, {
       model: "gemini-3.5-flash",
       contents: prompt,
     });

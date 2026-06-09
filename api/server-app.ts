@@ -184,6 +184,8 @@ CRITICAL RULES:
 2. DO NOT FABRICATE EXPERIENCE: Do not invent false companies, fake dates, or imaginary credentials. Rewrite existing bullet points to accentuate, rephrase, and align experience with high-priority JD keywords/requirements. Any keywords or skills integrated MUST be derived strictly from the candidate's existing experience in the Master Resume. Under no circumstances should you add, assume, or fabricate any tools, tech stacks, or responsibilities that the candidate does not actually have in their resume.
 3. INTEGRATE KEYWORDS NATURALLY (NO HIGHLIGHTS): Seamlessly inject relevant keywords from the Excel list and the JD text into the active bullet points, ensuring they correspond directly to the candidate's actual responsibilities and experience. Do NOT highlight these integrated keywords in the resume text with double quotes, bold text, italics, asterisks, or other formatting markers. They must blend in naturally as regular text.
 4. Professional tone is an absolute must.
+5. STRICT LENGTH AND PAGE COUNT PRESERVATION: The tailored resume MUST maintain the exact same length, section count, paragraph count, and bullet point count as the master resume. Do NOT expand, elaborate, or write verbose explanations. Keep sentences concise, punchy, and of similar length to the master resume to ensure the final page count does not increase.
+6. MS WORD FRIENDLY FORMATTING: Rework the content in simple, standard Markdown. Use only standard headers (#, ##, ###), bold text (**), and simple bullet point lists starting with "-". Do NOT use tables, blockquotes, horizontal rules, code blocks, or custom HTML tags, ensuring it parses and exports cleanly to Microsoft Word.
 `;
 
     const response = await generateContentWithRetry(ai, {

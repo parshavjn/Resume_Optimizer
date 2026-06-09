@@ -287,14 +287,16 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
     bodyHtml = bodyHtml.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
     // Bullet points
-    bodyHtml = bodyHtml.replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>');
-    bodyHtml = bodyHtml.replace(/^\s*\*\s+(.*)$/gm, '<li>$1</li>');
+    bodyHtml = bodyHtml.replace(/^\s*[-\*]\s+(.*)$/gm, '<li>$1</li>');
+
+    // Group adjacent <li> elements into <ul> blocks
+    bodyHtml = bodyHtml.replace(/(<li>.*<\/li>\s*)+/g, (match) => `<ul>\n${match}</ul>\n`);
 
     // Wrap plain text lines not styled
     bodyHtml = bodyHtml.split('\n').map(line => {
       const trimmed = line.trim();
       if (!trimmed) return '';
-      if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('</')) return line;
+      if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul') || trimmed.startsWith('</') || trimmed.startsWith('<div')) return line;
       return `<p>${line}</p>`;
     }).join('\n');
 

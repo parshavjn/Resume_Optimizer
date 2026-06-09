@@ -8,9 +8,11 @@ dotenv.config();
 async function generateContentWithRetry(
   ai: GoogleGenAI,
   options: { model: string; contents: string; [key: string]: any },
-  retries = 3,
-  delayMs = 1500
+  retries = 2,
+  delayMs = 800
 ): Promise<any> {
+  const fallbackModel = options.model === "gemini-2.5-flash" ? "gemini-2.0-flash" : "gemini-2.5-flash";
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await ai.models.generateContent(options);
@@ -28,11 +30,19 @@ async function generateContentWithRetry(
         errorMsg.includes("RESOURCE_EXHAUSTED") ||
         errorMsg.includes("429");
 
-      if (isTransient && attempt < retries) {
-        console.warn(`Attempt ${attempt} failed with transient error: ${errorMsg}. Retrying in ${delayMs}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs *= 2; // Exponential backoff
-        continue;
+      if (isTransient) {
+        if (options.model !== fallbackModel) {
+          console.warn(`Attempt ${attempt} failed for ${options.model}. Retrying immediately with fallback model ${fallbackModel}...`);
+          options.model = fallbackModel;
+          continue;
+        }
+
+        if (attempt < retries) {
+          console.warn(`Attempt ${attempt} failed with transient error: ${errorMsg}. Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          delayMs *= 1.5;
+          continue;
+        }
       }
       throw error;
     }

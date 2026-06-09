@@ -181,10 +181,10 @@ ${keywordsList}
 
 CRITICAL RULES:
 1. STRICT FORMAT MAINTENANCE: You MUST strictly adopt and reproduce the original resume's structural format (including sections like Contact Info, Executive Summary, Career History in order with exact Employer names, employment dates, and Education history).
-2. DO NOT FABRICATE EXPERIENCE: Do not invent false companies, fake dates, or imaginary credentials. Rewrite existing bullet points to accentuate, rephrase, and align experience with high-priority JD keywords/requirements (e.g. if the JD asks for KPI-driven metrics under ${targetRole}, highlight existing metrics in the style of the target JD).
-3. INTEGRATE KEYWORDS: Seamlessly inject relevant keywords from the Excel list and the JD text into the active bullet points.
-4. Professional tone is a absolute must.
-5. Provide the output in a clean, elegant Markdown resume format ready for exporting to Word or PDF. Do not write commentaries or introductory notes - output ONLY the optimized markdown resume directly.
+2. DO NOT FABRICATE EXPERIENCE: Do not invent false companies, fake dates, or imaginary credentials. Rewrite existing bullet points to accentuate, rephrase, and align experience with high-priority JD keywords/requirements (e.g. if the JD asks for KPI-driven metrics under ${targetRole}, highlight existing metrics in the style of the target JD). Any keywords or skills integrated MUST be derived strictly from the candidate's existing experience in the Master Resume. Under no circumstances should you add, assume, or fabricate any tools, tech stacks, or responsibilities that the candidate does not actually have in their resume.
+3. INTEGRATE KEYWORDS: Seamlessly inject relevant keywords from the Excel list and the JD text into the active bullet points, ensuring they correspond directly to the candidate's actual responsibilities and experience.
+4. Professional tone is an absolute must.
+5. Provide the output in a clean, elegant Markdown resume format. At the very end of your response, after a horizontal divider line (\`---\`), add a section titled \`### Tailoring & Keywords Reference\` where you list exactly which target-role related keywords were integrated into the resume and how they map to the candidate's existing experience.
 `;
 
     const response = await generateContentWithRetry(ai, {

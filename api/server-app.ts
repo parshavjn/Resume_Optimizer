@@ -11,12 +11,17 @@ async function generateContentWithRetry(
   retries = 3,
   delayMs = 1500
 ): Promise<any> {
+  const fallbackModel = options.model === "gemini-1.5-flash" ? "gemini-2.5-flash" : "gemini-1.5-flash";
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await ai.models.generateContent(options);
     } catch (error: any) {
       const errorMsg = error?.message || String(error);
       const isTransient = 
+        error?.status === 503 ||
+        error?.status === 504 ||
+        error?.status === 429 ||
         error?.status === "UNAVAILABLE" || 
         error?.status === "RESOURCE_EXHAUSTED" ||
         errorMsg.includes("503") || 
@@ -25,11 +30,19 @@ async function generateContentWithRetry(
         errorMsg.includes("RESOURCE_EXHAUSTED") ||
         errorMsg.includes("429");
 
-      if (isTransient && attempt < retries) {
-        console.warn(`Attempt ${attempt} failed with transient error: ${errorMsg}. Retrying in ${delayMs}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs *= 2; // Exponential backoff
-        continue;
+      if (isTransient) {
+        if (options.model !== fallbackModel) {
+          console.warn(`Attempt ${attempt} failed for ${options.model}. Retrying immediately with fallback model ${fallbackModel}...`);
+          options.model = fallbackModel;
+          continue;
+        }
+
+        if (attempt < retries) {
+          console.warn(`Attempt ${attempt} failed with transient error: ${errorMsg}. Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          delayMs *= 2; // Exponential backoff
+          continue;
+        }
       }
       throw error;
     }
@@ -59,11 +72,6 @@ app.post("/api/analyze-resume", async (req, res) => {
     
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
     });
 
     const keywordsList = excelKeywords && excelKeywords.length > 0 
@@ -106,7 +114,7 @@ Respond exactly matching this layout.
 `;
 
     const response = await generateContentWithRetry(ai, {
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: prompt,
     });
 
@@ -152,11 +160,6 @@ app.post("/api/generate-resume", async (req, res) => {
 
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
     });
     
     const keywordsList = excelKeywords && excelKeywords.length > 0 
@@ -185,7 +188,7 @@ CRITICAL RULES:
 `;
 
     const response = await generateContentWithRetry(ai, {
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: prompt,
     });
 

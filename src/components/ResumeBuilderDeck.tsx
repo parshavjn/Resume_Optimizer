@@ -203,7 +203,8 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
       sounds.playSuccess();
     } catch (err) {
       console.error(err);
-      alert("Error occurred performing resume JD keywords alignment. Check API connectivity.");
+      const errMsg = err instanceof Error ? err.message : String(err);
+      alert(`Error occurred performing resume JD keywords alignment: ${errMsg}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -231,7 +232,8 @@ export default function ResumeBuilderDeck({ muted }: ResumeBuilderDeckProps) {
       sounds.playSuccess();
     } catch (err) {
       console.error(err);
-      alert("Error occurred tailoring your resume. Check API connectivity.");
+      const errMsg = err instanceof Error ? err.message : String(err);
+      alert(`Error occurred tailoring your resume: ${errMsg}`);
     } finally {
       setIsGenerating(false);
     }
